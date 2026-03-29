@@ -1,0 +1,90 @@
+.landing-page {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.content-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.name-title {
+  font-size: 4rem;
+  font-weight: 900;
+  color: white;
+  margin: 0;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: slideInAndGlow 1.2s ease-out;
+  letter-spacing: 2px;
+}
+
+@keyframes slideInAndGlow {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  50% {
+    text-shadow: 0 4px 25px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.start-button {
+  padding: 15px 50px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #667eea;
+  background-color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 1.2s ease-out 0.3s backwards;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.start-button:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.start-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 768px) {
+  .name-title {
+    font-size: 2.5rem;
+  }
+
+  .start-button {
+    padding: 12px 40px;
+    font-size: 1rem;
+  }
+}
