@@ -1,12 +1,18 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
+import appRouter from './app.js';
+import { connectDB } from './db/db.js';
 const app = express();
-
 app.use(cors());
 app.use(express.json());
+// Connect to MongoDB
+connectDB();
 
-// API routes can go here
+// Use the app router
+app.use(appRouter);
+
+
+// API routes can go here 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working' });
 });
