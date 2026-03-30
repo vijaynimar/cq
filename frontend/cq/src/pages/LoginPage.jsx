@@ -5,13 +5,40 @@ import '../styles/LoginPage.css'
 function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
   const navigate = useNavigate()
+  const serverUrl = import.meta.env.serverUrl || import.meta.env.VITE_SERVER_URL
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    // Add login logic here
-    console.log('Login:', { email, password })
+    setError('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch(`${serverUrl}/user/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Login failed')
+        return
+      }
+
+      localStorage.setItem('token', data.token)
+      navigate('/dashboard')
+    } catch {
+      setError('Unable to connect to server')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSignUp = () => {
@@ -54,7 +81,11 @@ function LoginPage() {
             <span className="input-underline"></span>
           </div>
 
-          <button type="submit" className="login-btn">Login</button>
+          {error && <p className="auth-error">{error}</p>}
+
+          <button type="submit" className="login-btn" disabled={isLoading}>
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
 
         <div className="signup-link">

@@ -7,13 +7,44 @@ function RegisterPage() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
   const navigate = useNavigate()
+  const serverUrl = import.meta.env.serverUrl || import.meta.env.VITE_SERVER_URL
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
-    // Add registration logic here
-    console.log('Register:', { name, email, phone, password })
+    setError('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch(`${serverUrl}/user/createUser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: name,
+          email,
+          phone,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Registration failed')
+        return
+      }
+
+      navigate('/login')
+    } catch {
+      setError('Unable to connect to server')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleLogin = () => {
@@ -86,7 +117,11 @@ function RegisterPage() {
             <span className="input-underline"></span>
           </div>
 
-          <button type="submit" className="register-btn">Create Account</button>
+          {error && <p className="auth-error">{error}</p>}
+
+          <button type="submit" className="register-btn" disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
 
         <div className="login-link">
