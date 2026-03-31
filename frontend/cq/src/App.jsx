@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage'
 import ProductsPage from './pages/ProductsPage'
 import WalletPage from './pages/WalletPage'
 import PaymentPage from './pages/PaymentPage'
+import StudentsPage from './pages/StudentsPage'
 import './App.css'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/students" element={<StudentsPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/payment" element={<PaymentPage />} />
       </Routes>

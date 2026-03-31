@@ -1,4 +1,7 @@
 import { User } from "../model/user.js"
+import { WalletTransaction } from "../model/walletTransaction.js"
+import { Cart } from "../model/cart.js"
+import { Order } from "../model/order.js"
 import { v2 } from "cloudinary"
 import fs from "fs/promises"
 import "dotenv/config"
@@ -85,5 +88,32 @@ export const getMe=async(req,res)=>{
     }
     catch(error){
         res.status(500).json({error:"Failed to fetch user"})
+    }
+}
+
+export const deleteMe=async(req,res)=>{
+    try{
+        const userId=req.user?.userId;
+        if(!userId){
+            return res.status(401).json({error:"Unauthorized"})
+        }
+
+        const user=await User.findById(userId).select("_id role");
+        if(!user){
+            return res.status(404).json({error:"User not found"})
+        }
+
+        await Promise.all([
+            WalletTransaction.deleteMany({userId}),
+            Cart.deleteOne({userId}),
+            Order.deleteMany({userId}),
+            User.findByIdAndDelete(userId),
+        ]);
+
+        return res.json({message:"Account and related data deleted successfully"})
+    }
+    catch(error){
+        console.error('Error deleting account:',error);
+        return res.status(500).json({error:"Failed to delete account"})
     }
 }

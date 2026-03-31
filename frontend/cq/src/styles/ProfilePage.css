@@ -246,6 +246,7 @@
 .profile-actions {
   display: flex;
   justify-content: flex-start;
+  gap: 10px;
   padding-top: 16px;
   border-top: 1px solid #ecefff;
 }
@@ -265,6 +266,28 @@
 .logout-profile-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(255, 95, 109, 0.35);
+}
+
+.delete-account-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #d92d20, #f04438);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.delete-account-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(217, 45, 32, 0.35);
+}
+
+.delete-account-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
