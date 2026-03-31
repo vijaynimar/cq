@@ -30,6 +30,81 @@ const buildOrderNumber = () => {
   return `ORD-${stamp}-${rand}`;
 };
 
+const restoreProductStocks = async (items = []) => {
+  await Promise.all(
+    items.map((item) =>
+      Product.findByIdAndUpdate(item.productId, {
+        $inc: { totalStocks: item.quantity },
+        $set: { isOutOfStock: false, updatedAt: new Date() },
+      })
+    )
+  );
+};
+
+export const getMenu = async (req, res) => {
+  try {
+    const { category, type, q } = req.query;
+    const filter = { deletedAt: null };
+    if (category && ["breakfast", "lunch", "snacks", "drinks"].includes(category)) {
+      filter.category = category;
+    }
+    if (type && ["veg", "non-veg"].includes(type)) {
+      filter.type = type;
+    }
+    if (q) {
+      filter.name = { $regex: q, $options: "i" };
+    }
+
+    const products = await Product.find(filter).sort({ category: 1, name: 1 });
+    const grouped = {
+      breakfast: products.filter((p) => p.category === "breakfast"),
+      lunch: products.filter((p) => p.category === "lunch"),
+      snacks: products.filter((p) => p.category === "snacks"),
+      drinks: products.filter((p) => p.category === "drinks"),
+    };
+    return res.json({ products, grouped });
+  } catch (error) {
+    console.error("Error in getMenu:", error);
+    return res.status(500).json({ error: "Failed to fetch menu" });
+  }
+};
+
+export const getFrequentOrders = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const recentOrders = await Order.find({ userId, kitchenStatus: { $ne: "cancelled" } })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .select("items");
+
+    const frequencyMap = new Map();
+    recentOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        const key = String(item.productId);
+        const current = frequencyMap.get(key) || {
+          productId: item.productId,
+          name: item.nameSnapshot,
+          image: item.imageSnapshot,
+          type: item.typeSnapshot,
+          price: item.priceSnapshot,
+          count: 0,
+        };
+        current.count += item.quantity;
+        frequencyMap.set(key, current);
+      });
+    });
+
+    const frequent = Array.from(frequencyMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+
+    return res.json(frequent);
+  } catch (error) {
+    console.error("Error in getFrequentOrders:", error);
+    return res.status(500).json({ error: "Failed to fetch frequent orders" });
+  }
+};
+
 export const getWalletSummary = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -256,12 +331,20 @@ export const addCartItem = async (req, res) => {
 
     const product = await Product.findOne({ _id: productId, deletedAt: null });
     if (!product) return res.status(404).json({ error: "Product not found" });
+    if (Number(product.totalStocks || 0) <= 0) {
+      return res.status(400).json({ error: "Product is out of stock" });
+    }
 
     let cart = await Cart.findOne({ userId });
     if (!cart) cart = await Cart.create({ userId, items: [] });
 
     const existing = cart.items.find((item) => String(item.productId) === String(productId));
     if (existing) {
+      if (existing.quantity + qty > Number(product.totalStocks || 0)) {
+        return res.status(400).json({
+          error: `Only ${product.totalStocks} item(s) available in stock`,
+        });
+      }
       existing.quantity += qty;
       existing.priceSnapshot = Number(product.price || 0);
       existing.nameSnapshot = product.name;
@@ -269,6 +352,11 @@ export const addCartItem = async (req, res) => {
       existing.typeSnapshot = product.type || "veg";
       existing.lineTotal = Number((existing.quantity * existing.priceSnapshot).toFixed(2));
     } else {
+      if (qty > Number(product.totalStocks || 0)) {
+        return res.status(400).json({
+          error: `Only ${product.totalStocks} item(s) available in stock`,
+        });
+      }
       const price = Number(product.price || 0);
       cart.items.push({
         productId,
@@ -305,6 +393,14 @@ export const updateCartItem = async (req, res) => {
 
     const item = cart.items.id(itemId);
     if (!item) return res.status(404).json({ error: "Cart item not found" });
+
+    const product = await Product.findOne({ _id: item.productId, deletedAt: null });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    if (qty > Number(product.totalStocks || 0)) {
+      return res.status(400).json({
+        error: `Only ${product.totalStocks} item(s) available in stock`,
+      });
+    }
 
     item.quantity = qty;
     item.lineTotal = Number((qty * item.priceSnapshot).toFixed(2));
@@ -358,10 +454,16 @@ export const clearCart = async (req, res) => {
 };
 
 export const checkoutOrder = async (req, res) => {
+  let deductedStockItems = [];
   try {
     const userId = req.user?.userId;
     const paymentMethod = req.body.paymentMethod || "wallet";
     const address = req.body.address || {};
+    const pickupTime = req.body.pickupTime;
+
+    if (!pickupTime || Number.isNaN(new Date(pickupTime).getTime())) {
+      return res.status(400).json({ error: "Valid pickupTime is required" });
+    }
 
     const [cart, user] = await Promise.all([
       Cart.findOne({ userId }),
@@ -372,6 +474,46 @@ export const checkoutOrder = async (req, res) => {
       return res.status(400).json({ error: "Cart is empty" });
     }
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Validate latest stock and reserve by decrementing now.
+    for (const item of cart.items) {
+      const updatedProduct = await Product.findOneAndUpdate(
+        {
+          _id: item.productId,
+          deletedAt: null,
+          totalStocks: { $gte: item.quantity },
+        },
+        {
+          $inc: { totalStocks: -item.quantity },
+          $set: { updatedAt: new Date() },
+        },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        if (deductedStockItems.length > 0) {
+          await restoreProductStocks(deductedStockItems);
+        }
+        return res.status(400).json({
+          error: `${item.nameSnapshot} has insufficient stock. Please update your cart.`,
+        });
+      }
+
+      const shouldBeOutOfStock = Number(updatedProduct.totalStocks || 0) <= 0;
+      if (updatedProduct.isOutOfStock !== shouldBeOutOfStock) {
+        await Product.findByIdAndUpdate(updatedProduct._id, {
+          $set: {
+            isOutOfStock: shouldBeOutOfStock,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      deductedStockItems.push({
+        productId: item.productId,
+        quantity: item.quantity,
+      });
+    }
 
     const subTotal = Number(cart.subTotal || 0);
     const tax = Number((subTotal * 0.05).toFixed(2));
@@ -384,6 +526,7 @@ export const checkoutOrder = async (req, res) => {
     if (paymentMethod === "wallet") {
       const before = safeWalletBalance(user);
       if (before < total) {
+        await restoreProductStocks(deductedStockItems);
         return res.status(400).json({ error: "Insufficient wallet balance for checkout" });
       }
       const after = Number((before - total).toFixed(2));
@@ -410,6 +553,8 @@ export const checkoutOrder = async (req, res) => {
     const order = await Order.create({
       orderNumber: buildOrderNumber(),
       userId,
+      pickupTime: new Date(pickupTime),
+      kitchenStatus: "received",
       items: cart.items.map((item) => ({
         productId: item.productId,
         nameSnapshot: item.nameSnapshot,
@@ -435,8 +580,8 @@ export const checkoutOrder = async (req, res) => {
       status: paymentStatus === "paid" ? "paid" : "pending",
       timeline: [
         {
-          status: paymentStatus === "paid" ? "paid" : "pending",
-          note: "Order created",
+          status: "received",
+          note: "Order received by kitchen",
           at: new Date(),
         },
       ],
@@ -456,8 +601,64 @@ export const checkoutOrder = async (req, res) => {
       order,
     });
   } catch (error) {
+    if (deductedStockItems.length > 0) {
+      try {
+        await restoreProductStocks(deductedStockItems);
+      } catch (restoreError) {
+        console.error("Failed to restore product stocks:", restoreError);
+      }
+    }
     console.error("Error in checkoutOrder:", error);
     return res.status(500).json({ error: "Failed to checkout order" });
+  }
+};
+
+export const quickReorder = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const { productId } = req.body;
+    if (!productId) {
+      return res.status(400).json({ error: "productId is required" });
+    }
+
+    const product = await Product.findOne({ _id: productId, deletedAt: null });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    if (Number(product.totalStocks || 0) <= 0) {
+      return res.status(400).json({ error: "Product is out of stock" });
+    }
+
+    let cart = await Cart.findOne({ userId });
+    if (!cart) cart = await Cart.create({ userId, items: [] });
+
+    const existing = cart.items.find((item) => String(item.productId) === String(productId));
+    if (existing) {
+      if (existing.quantity + 1 > Number(product.totalStocks || 0)) {
+        return res.status(400).json({
+          error: `Only ${product.totalStocks} item(s) available in stock`,
+        });
+      }
+      existing.quantity += 1;
+      existing.lineTotal = Number((existing.quantity * existing.priceSnapshot).toFixed(2));
+    } else {
+      const price = Number(product.price || 0);
+      cart.items.push({
+        productId,
+        nameSnapshot: product.name,
+        imageSnapshot: product.image?.[0] || "",
+        typeSnapshot: product.type || "veg",
+        priceSnapshot: price,
+        quantity: 1,
+        lineTotal: price,
+      });
+    }
+
+    rebuildCartTotals(cart);
+    await cart.save();
+
+    return res.status(201).json({ message: "Added to cart", cart });
+  } catch (error) {
+    console.error("Error in quickReorder:", error);
+    return res.status(500).json({ error: "Failed to quick reorder" });
   }
 };
 

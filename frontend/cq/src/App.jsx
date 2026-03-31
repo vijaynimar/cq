@@ -9,6 +9,8 @@ import ProductsPage from './pages/ProductsPage'
 import WalletPage from './pages/WalletPage'
 import PaymentPage from './pages/PaymentPage'
 import StudentsPage from './pages/StudentsPage'
+import CartPage from './pages/CartPage'
+import OrdersPage from './pages/OrdersPage'
 import './App.css'
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/students" element={<StudentsPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/payment" element={<PaymentPage />} />
       </Routes>

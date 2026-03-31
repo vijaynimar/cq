@@ -12,7 +12,7 @@ v2.config({
   });
 export const addProduct=async(req,res)=>{
     try{
-        const {name,totalStocks,price,type}=req.body;
+        const {name,totalStocks,price,type,category,description,isOutOfStock}=req.body;
         if(!name || !totalStocks || !price){
             return res.status(400).json({error:"Name, stock, and price are required"})
         }
@@ -31,9 +31,12 @@ export const addProduct=async(req,res)=>{
     }
         const newProduct=new Product({
             name,
+            description: description || "",
             totalStocks,
             price,
             type: type || "veg",
+            category: category || "snacks",
+            isOutOfStock: String(isOutOfStock) === "true",
             image: imageUrl
         })
         const savedProduct=await newProduct.save();
@@ -71,13 +74,16 @@ export const getSingleProduct=async(req,res)=>{
 export const updateProduct=async(req,res)=>{
     try{
         const {id}=req.params;
-        const {name,totalStocks,price,type}=req.body;
+        const {name,totalStocks,price,type,category,description,isOutOfStock}=req.body;
         
         const updateData={};
         if(name) updateData.name=name;
+        if(description!==undefined) updateData.description=description;
         if(totalStocks!==undefined) updateData.totalStocks=totalStocks;
         if(price) updateData.price=price;
         if(type) updateData.type=type;
+        if(category) updateData.category=category;
+        if(isOutOfStock!==undefined) updateData.isOutOfStock=String(isOutOfStock)==="true";
         updateData.updatedAt=new Date();
         
         // Handle new image uploads
@@ -196,5 +202,72 @@ export const deleteStudentByAdmin=async(req,res)=>{
     }catch(error){
         console.error('Error deleting student:',error);
         res.status(500).json({error:"Failed to delete student"})
+    }
+}
+
+export const toggleProductStock=async(req,res)=>{
+    try{
+        const {id}=req.params;
+        const {isOutOfStock}=req.body;
+        if(isOutOfStock===undefined){
+            return res.status(400).json({error:"isOutOfStock is required"})
+        }
+
+        const updated=await Product.findByIdAndUpdate(
+            id,
+            {isOutOfStock:String(isOutOfStock)==="true",updatedAt:new Date()},
+            {new:true}
+        );
+        if(!updated){
+            return res.status(404).json({error:"Product not found"})
+        }
+        res.json(updated)
+    }catch(error){
+        console.error('Error toggling stock:',error);
+        res.status(500).json({error:"Failed to update stock"})
+    }
+}
+
+export const getLiveOrderQueue=async(req,res)=>{
+    try{
+        const queue=await Order.find({})
+            .sort({createdAt:-1})
+            .populate("userId","firstName lastName email");
+        res.json(queue)
+    }catch(error){
+        console.error('Error fetching live queue:',error);
+        res.status(500).json({error:"Failed to fetch order history"})
+    }
+}
+
+export const updateOrderKitchenStatus=async(req,res)=>{
+    try{
+        const {id}=req.params;
+        const {kitchenStatus}=req.body;
+        const allowed=["received","preparing","ready","completed","cancelled"];
+        if(!allowed.includes(kitchenStatus)){
+            return res.status(400).json({error:"Invalid kitchen status"})
+        }
+
+        const order=await Order.findById(id);
+        if(!order){
+            return res.status(404).json({error:"Order not found"})
+        }
+
+        if(order.kitchenStatus==="completed"){
+            return res.status(409).json({error:"Completed orders cannot be edited"})
+        }
+
+        order.kitchenStatus=kitchenStatus;
+        order.timeline.push({
+            status:kitchenStatus,
+            note:`Kitchen status set to ${kitchenStatus}`,
+            at:new Date(),
+        });
+        await order.save();
+        res.json(order)
+    }catch(error){
+        console.error('Error updating order status:',error);
+        res.status(500).json({error:"Failed to update order status"})
     }
 }

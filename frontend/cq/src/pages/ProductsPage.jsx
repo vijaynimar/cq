@@ -12,9 +12,12 @@ function ProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     totalStocks: '',
     price: '',
     type: 'veg',
+    category: 'snacks',
+    isOutOfStock: false,
   })
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
@@ -82,7 +85,7 @@ function ProductsPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', totalStocks: '', price: '', type: 'veg' })
+    setFormData({ name: '', description: '', totalStocks: '', price: '', type: 'veg', category: 'snacks', isOutOfStock: false })
     setImageFiles([])
     setImagePreviews([])
     setEditingProduct(null)
@@ -98,9 +101,12 @@ function ProductsPage() {
     const token = localStorage.getItem('token')
     const data = new FormData()
     data.append('name', formData.name)
+    data.append('description', formData.description)
     data.append('totalStocks', formData.totalStocks)
     data.append('price', formData.price)
     data.append('type', formData.type)
+    data.append('category', formData.category)
+    data.append('isOutOfStock', String(formData.isOutOfStock))
 
     imageFiles.forEach((file) => {
       data.append('photos', file)
@@ -134,9 +140,12 @@ function ProductsPage() {
     setEditingProduct(product)
     setFormData({
       name: product.name,
+      description: product.description || '',
       totalStocks: product.totalStocks,
       price: product.price,
       type: product.type,
+      category: product.category || 'snacks',
+      isOutOfStock: Boolean(product.isOutOfStock),
     })
     setImageFiles([])
     setImagePreviews(product.image || [])
@@ -152,9 +161,12 @@ function ProductsPage() {
     const token = localStorage.getItem('token')
     const data = new FormData()
     data.append('name', formData.name)
+    data.append('description', formData.description)
     data.append('totalStocks', formData.totalStocks)
     data.append('price', formData.price)
     data.append('type', formData.type)
+    data.append('category', formData.category)
+    data.append('isOutOfStock', String(formData.isOutOfStock))
 
     imageFiles.forEach((file) => {
       data.append('photos', file)
@@ -202,6 +214,28 @@ function ProductsPage() {
 
       setProducts(products.filter((p) => p._id !== productId))
       setError('')
+    } catch {
+      setError('Unable to connect to server')
+    }
+  }
+
+  const handleToggleStock = async (productId, current) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${serverUrl}/admin/products/${productId}/stock`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isOutOfStock: !current }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || 'Failed to toggle stock')
+        return
+      }
+      setProducts((prev) => prev.map((p) => (p._id === productId ? data : p)))
     } catch {
       setError('Unable to connect to server')
     }
@@ -257,13 +291,17 @@ function ProductsPage() {
 
               <div className="product-info">
                 <h3>{product.name}</h3>
-                <p className="product-type">{product.type}</p>
+                <p className="product-type">{product.type} | {product.category || 'snacks'}</p>
                 <p className="product-price">₹{product.price}</p>
                 <p className="product-stock">Stock: {product.totalStocks}</p>
+                <p className="product-stock">Status: {product.isOutOfStock ? 'Out of Stock' : 'In Stock'}</p>
 
                 <div className="product-actions">
                   <button className="edit-btn" onClick={() => handleEditProduct(product)}>
                     Edit
+                  </button>
+                  <button className="edit-btn" onClick={() => handleToggleStock(product._id, product.isOutOfStock)}>
+                    {product.isOutOfStock ? 'Mark In Stock' : 'Mark Out'}
                   </button>
                   <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>
                     Delete
@@ -289,6 +327,17 @@ function ProductsPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter product name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Short product description"
                 />
               </div>
 
@@ -323,6 +372,27 @@ function ProductsPage() {
                   <option value="veg">Veg</option>
                   <option value="non-veg">Non-Veg</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select name="category" value={formData.category} onChange={handleInputChange}>
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="snacks">Snacks</option>
+                  <option value="drinks">Drinks</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(formData.isOutOfStock)}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, isOutOfStock: e.target.checked }))}
+                  />
+                  {' '}Mark as Out of Stock
+                </label>
               </div>
 
               <div className="form-group">

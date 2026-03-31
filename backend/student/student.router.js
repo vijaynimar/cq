@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { authenticateToken, authorizeStudent } from "../middleware/auth.js";
 import {
+  getMenu,
+  getFrequentOrders,
   getWalletSummary,
   getWalletHistory,
   topupWallet,
@@ -13,12 +15,17 @@ import {
   checkoutOrder,
   getOrders,
   getOrderById,
+  quickReorder,
 } from "./student.controller.js";
 
 const studentRouter = Router();
 
 studentRouter.use(authenticateToken);
 studentRouter.use(authorizeStudent);
+
+studentRouter.get("/menu", getMenu);
+studentRouter.get("/frequent-orders", getFrequentOrders);
+studentRouter.post("/reorder", quickReorder);
 
 studentRouter.get("/wallet/summary", getWalletSummary);
 studentRouter.get("/wallet/history", getWalletHistory);
