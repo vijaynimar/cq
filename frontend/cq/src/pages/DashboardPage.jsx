@@ -33,6 +33,7 @@ function DashboardPage() {
       { label: 'Profile', icon: 'P' },
       { label: 'Cart', icon: 'C' },
       { label: 'Wallet', icon: 'W' },
+      { label: 'Payment', icon: 'PY' },
       { label: 'Orders', icon: 'OR' },
       { label: 'Support', icon: 'SP' }
     ]
@@ -75,9 +76,13 @@ function DashboardPage() {
   const handleNavClick = (label) => {
     if (label === 'Profile') {
       navigate('/profile')
-      } else if (label === 'Products') {
-          navigate('/products')
-        }
+    } else if (label === 'Products') {
+      navigate('/products')
+    } else if (label === 'Wallet') {
+      navigate('/wallet')
+    } else if (label === 'Payment') {
+      navigate('/payment')
+    }
   }
 
   return (

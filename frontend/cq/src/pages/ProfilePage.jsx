@@ -281,28 +281,19 @@ function ProfilePage() {
                   <p className="readonly-value">{user?.phone || '-'}</p>
                 </div>
 
-                <div className="field-group">
-                  <label>Wallet Money</label>
-                  <div className="field-input-wrapper">
-                    <input
-                      type="text"
-                      name="walletMoney"
-                      value={formData.walletMoney}
-                      onChange={handleFieldChange}
-                      placeholder="Wallet money"
-                    />
-                    {isFieldChanged('walletMoney') && (
-                      <button
-                        type="button"
-                        className="update-field-btn"
-                        onClick={() => handleUpdateField('walletMoney')}
-                        disabled={updatingField === 'walletMoney'}
-                      >
-                        {updatingField === 'walletMoney' ? 'Updating...' : 'Update'}
-                      </button>
-                    )}
+                {user?.role !== 'admin' && (
+                  <div className="readonly-group">
+                    <label>Wallet Money</label>
+                    <p className="readonly-value">{Number(user?.walletMoney || 0).toFixed(2)}</p>
+                    <button
+                      type="button"
+                      className="update-field-btn"
+                      onClick={() => navigate('/wallet')}
+                    >
+                      Open Wallet
+                    </button>
                   </div>
-                </div>
+                )}
 
                 <div className="readonly-group">
                   <label>Role</label>

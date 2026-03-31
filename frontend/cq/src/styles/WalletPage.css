@@ -1,0 +1,152 @@
+.wallet-page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 28px;
+  background: radial-gradient(circle at top right, #cfd9ff 0%, #f3f5ff 36%, #eef4ff 100%);
+}
+
+.wallet-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wallet-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wallet-back-btn,
+.wallet-pay-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wallet-back-btn {
+  background: #fff;
+  color: #334085;
+  box-shadow: 0 8px 22px rgba(47, 53, 86, 0.14);
+}
+
+.wallet-pay-btn {
+  background: linear-gradient(135deg, #3e63dd, #6c47ff);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(62, 99, 221, 0.3);
+}
+
+.wallet-hero {
+  background: linear-gradient(135deg, #0f265c, #25378a 55%, #2c4cb0);
+  border-radius: 20px;
+  padding: 28px;
+  color: #fff;
+  box-shadow: 0 20px 48px rgba(16, 35, 92, 0.35);
+}
+
+.wallet-label {
+  margin: 0;
+  opacity: 0.86;
+  font-weight: 600;
+}
+
+.wallet-hero h1 {
+  margin: 8px 0 2px;
+  font-size: 2.2rem;
+  letter-spacing: 0.3px;
+}
+
+.wallet-updating {
+  margin: 6px 0 0;
+  color: #a7f3d0;
+  font-weight: 700;
+}
+
+.wallet-error {
+  margin: 6px 0 0;
+  color: #fecaca;
+  font-weight: 700;
+}
+
+.wallet-transactions {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(38, 54, 120, 0.12);
+}
+
+.wallet-transactions h2 {
+  margin: 0 0 14px;
+  color: #1f2a60;
+}
+
+.wallet-empty {
+  color: #6a7294;
+}
+
+.wallet-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallet-tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e8edff;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.wallet-tx-title {
+  margin: 0;
+  color: #1f2a60;
+  font-weight: 700;
+}
+
+.wallet-tx-time {
+  margin: 4px 0 0;
+  color: #6a7294;
+  font-size: 0.9rem;
+}
+
+.wallet-tx-right {
+  text-align: right;
+}
+
+.wallet-tx-amount {
+  margin: 0;
+  color: #14804a;
+  font-weight: 800;
+}
+
+.wallet-tx-status {
+  margin-top: 5px;
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .wallet-page {
+    padding: 14px;
+  }
+
+  .wallet-topbar {
+    flex-direction: column;
+  }
+
+  .wallet-hero h1 {
+    font-size: 1.8rem;
+  }
+}

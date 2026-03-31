@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
 import ProductsPage from './pages/ProductsPage'
+import WalletPage from './pages/WalletPage'
+import PaymentPage from './pages/PaymentPage'
 import './App.css'
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/wallet" element={<WalletPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
       </Routes>
     </Router>
   )

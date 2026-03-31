@@ -32,16 +32,15 @@ export const updateUserProfile=async(req,res)=>{
         }
 
         // Protect sensitive fields
-        if(req.body.role || req.body.createdAt || req.body.deletedAt || req.body.email || req.body.phone){
+        if(req.body.role || req.body.createdAt || req.body.deletedAt || req.body.email || req.body.phone || req.body.walletMoney){
             return res.status(403).json({error:"Cannot modify protected fields"})
         }
 
-        const {firstName,lastName,walletMoney}=req.body;
+        const {firstName,lastName}=req.body;
         const updateData={};
 
         if(firstName!==undefined && firstName!==null) updateData.firstName=firstName;
         if(lastName!==undefined && lastName!==null) updateData.lastName=lastName;
-        if(walletMoney!==undefined && walletMoney!==null) updateData.walletMoney=walletMoney;
 
         // Handle image upload to Cloudinary
         if(req.file){
