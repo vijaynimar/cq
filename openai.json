@@ -1,26 +1,64 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "CQ Auth API",
+    "title": "CQ Backend API",
     "version": "1.0.0",
-    "description": "OpenAPI definition for account creation and login endpoints."
+    "description": "OpenAPI definition for the current CQ backend endpoints."
   },
   "servers": [
     {
       "url": "http://localhost:5000"
     }
   ],
+  "tags": [
+    {
+      "name": "System"
+    },
+    {
+      "name": "User"
+    },
+    {
+      "name": "Common"
+    },
+    {
+      "name": "Admin"
+    }
+  ],
   "paths": {
+    "/api/test": {
+      "get": {
+        "operationId": "getApiTest",
+        "tags": [
+          "System"
+        ],
+        "summary": "API connectivity test",
+        "responses": {
+          "200": {
+            "description": "API is working",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiTestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/user/createUser": {
       "post": {
-        "operationId": "createAccount",
+        "operationId": "createUser",
+        "tags": [
+          "User"
+        ],
         "summary": "Create a new user account",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAccountRequest"
+                "$ref": "#/components/schemas/CreateUserRequest"
               }
             }
           }
@@ -61,7 +99,10 @@
     },
     "/user/login": {
       "post": {
-        "operationId": "login",
+        "operationId": "loginUser",
+        "tags": [
+          "User"
+        ],
         "summary": "Login with email and password",
         "requestBody": {
           "required": true,
@@ -106,11 +147,191 @@
           }
         }
       }
+    },
+    "/common/health": {
+      "get": {
+        "operationId": "commonHealth",
+        "tags": [
+          "Common"
+        ],
+        "summary": "Health endpoint for common module",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/common/updateProfile/{id}": {
+      "put": {
+        "operationId": "updateUserProfile",
+        "tags": [
+          "Common"
+        ],
+        "summary": "Update user profile by user id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB user id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserWithoutPassword"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/addProduct": {
+      "post": {
+        "operationId": "addProduct",
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Add a product with up to 10 images",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AddProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to add product",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
-      "CreateAccountRequest": {
+      "ApiTestResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "API is working"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateUserRequest": {
         "type": "object",
         "required": [
           "firstName",
@@ -121,6 +342,10 @@
           "firstName": {
             "type": "string",
             "example": "Vijay"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Kumar"
           },
           "email": {
             "type": "string",
@@ -140,9 +365,17 @@
             "type": "string",
             "example": "https://example.com/avatar.png"
           },
+          "walletMoney": {
+            "type": "string",
+            "example": "0"
+          },
           "role": {
             "type": "string",
-            "example": "user"
+            "enum": [
+              "student",
+              "admin"
+            ],
+            "example": "student"
           }
         }
       },
@@ -171,18 +404,40 @@
           "token": {
             "type": "string",
             "description": "JWT token"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "admin"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "role"
+            ]
           }
         },
         "required": [
-          "token"
+          "token",
+          "user"
         ]
       },
-      "User": {
+      "UpdateProfileRequest": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
-          },
           "firstName": {
             "type": "string"
           },
@@ -195,16 +450,124 @@
           },
           "image": {
             "type": "string"
+          }
+        }
+      },
+      "AddProductRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "totalStocks"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Notebook"
+          },
+          "totalStocks": {
+            "type": "number",
+            "example": 100
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "Upload up to 10 product images"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "walletMoney": {
+            "type": "string"
           },
           "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "admin"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UserWithoutPassword": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/User"
+          }
+        ],
+        "description": "User object without password field in actual responses"
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "totalStocks": {
+            "type": "number"
+          },
+          "image": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "createdAt": {
             "type": "string",
             "format": "date-time"
           },
           "updatedAt": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time"
           }
         }
