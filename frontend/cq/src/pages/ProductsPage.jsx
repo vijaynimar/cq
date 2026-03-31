@@ -9,6 +9,7 @@ function ProductsPage() {
   const [error, setError] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     totalStocks: '',
@@ -106,6 +107,7 @@ function ProductsPage() {
     })
 
     try {
+      setIsSubmitting(true)
       const response = await fetch(`${serverUrl}/admin/addProduct`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -123,6 +125,8 @@ function ProductsPage() {
       setError('')
     } catch {
       setError('Unable to connect to server')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -157,6 +161,7 @@ function ProductsPage() {
     })
 
     try {
+      setIsSubmitting(true)
       const response = await fetch(`${serverUrl}/admin/products/${editingProduct._id}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -174,6 +179,8 @@ function ProductsPage() {
       setError('')
     } catch {
       setError('Unable to connect to server')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -204,9 +211,14 @@ function ProductsPage() {
     <div className="products-container">
       <div className="products-header">
         <h1>Products Management</h1>
-        <button className="add-product-btn" onClick={() => { resetForm(); setShowAddModal(true); }}>
-          + Add Product
-        </button>
+        <div className="header-actions">
+          <button className="dashboard-btn" onClick={() => navigate('/dashboard')}>
+            Dashboard
+          </button>
+          <button className="add-product-btn" onClick={() => { resetForm(); setShowAddModal(true); }}>
+            + Add Product
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -329,10 +341,17 @@ function ProductsPage() {
                   type="button"
                   className="save-btn"
                   onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
+                  disabled={isSubmitting}
                 >
-                  {editingProduct ? 'Update' : 'Add'} Product
+                  {editingProduct
+                    ? isSubmitting
+                      ? 'Updating...'
+                      : 'Update Product'
+                    : isSubmitting
+                      ? 'Adding...'
+                      : 'Add Product'}
                 </button>
-                <button type="button" className="cancel-btn" onClick={resetForm}>
+                <button type="button" className="cancel-btn" onClick={resetForm} disabled={isSubmitting}>
                   Cancel
                 </button>
               </div>

@@ -23,6 +23,30 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-btn {
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #3f4d95;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 20px rgba(35, 39, 68, 0.18);
+}
+
+.dashboard-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(35, 39, 68, 0.24);
+}
+
 .add-product-btn {
   padding: 12px 24px;
   background: linear-gradient(135deg, #f093fb, #f5576c);
@@ -336,6 +360,15 @@
   }
 
   .add-product-btn {
+    width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .dashboard-btn {
     width: 100%;
   }
 
