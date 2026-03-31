@@ -78,6 +78,8 @@ function DashboardPage() {
       navigate('/profile')
     } else if (label === 'Products') {
       navigate('/products')
+    } else if (label === 'Students') {
+      navigate('/students')
     } else if (label === 'Wallet') {
       navigate('/wallet')
     } else if (label === 'Payment') {

@@ -173,6 +173,44 @@ function ProfilePage() {
     navigate('/login')
   }
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm('Are you sure you want to delete your account? This will remove all your data permanently.')
+    if (!confirmed) return
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      navigate('/login')
+      return
+    }
+
+    setUpdatingField('deleteAccount')
+    setError('')
+
+    try {
+      const response = await fetch(`${serverUrl}/common/deleteMe`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        setError(result.error || 'Failed to delete account')
+        return
+      }
+
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('role')
+      navigate('/login')
+    } catch {
+      setError('Unable to connect to server')
+    } finally {
+      setUpdatingField(null)
+    }
+  }
+
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
 
   return (
@@ -309,6 +347,14 @@ function ProfilePage() {
               <div className="profile-actions">
                 <button type="button" className="logout-profile-btn" onClick={handleLogout}>
                   Logout
+                </button>
+                <button
+                  type="button"
+                  className="delete-account-btn"
+                  onClick={handleDeleteAccount}
+                  disabled={updatingField === 'deleteAccount'}
+                >
+                  {updatingField === 'deleteAccount' ? 'Deleting...' : 'Delete Account'}
                 </button>
               </div>
             </div>

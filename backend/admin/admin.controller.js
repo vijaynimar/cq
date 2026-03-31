@@ -1,4 +1,8 @@
 import { Product } from "../model/product.js";
+import { User } from "../model/user.js";
+import { WalletTransaction } from "../model/walletTransaction.js";
+import { Cart } from "../model/cart.js";
+import { Order } from "../model/order.js";
 import {v2} from "cloudinary"
 import fs from "fs/promises"
 v2.config({
@@ -111,5 +115,86 @@ export const deleteProduct=async(req,res)=>{
     }catch(error){
         console.error('Error deleting product:',error);
         res.status(500).json({error:"Failed to delete product"})
+    }
+}
+
+export const getAllStudents=async(req,res)=>{
+    try{
+        const students=await User.find({role:"student",deletedAt:null}).select("-password");
+        res.json(students)
+    }catch(error){
+        console.error('Error fetching students:',error);
+        res.status(500).json({error:"Failed to fetch students"})
+    }
+}
+
+export const updateStudentByAdmin=async(req,res)=>{
+    try{
+        const {id}=req.params;
+        const student=await User.findOne({_id:id,role:"student",deletedAt:null});
+        if(!student){
+            return res.status(404).json({error:"Student not found"})
+        }
+
+        const protectedFields=["role","password","email","phone","createdAt","deletedAt","_id"];
+        const updateData={};
+
+        Object.keys(req.body || {}).forEach((key)=>{
+            if(!protectedFields.includes(key)){
+                updateData[key]=req.body[key];
+            }
+        });
+
+        if(req.file){
+            try{
+                const uploaded=await v2.uploader.upload(req.file.path);
+                updateData.image=uploaded.secure_url;
+                fs.unlink(req.file.path).catch(()=>{});
+            }catch(uploadErr){
+                console.error('Cloudinary upload error for student image:',uploadErr);
+                return res.status(500).json({error:"Failed to upload student image"})
+            }
+        }
+
+        if(Object.keys(updateData).length===0){
+            return res.status(400).json({error:"No editable fields provided"})
+        }
+
+        if(updateData.walletMoney!==undefined){
+            const parsedWallet=Number(updateData.walletMoney);
+            if(Number.isFinite(parsedWallet) && parsedWallet>=0){
+                updateData.walletMoney=parsedWallet;
+            }else{
+                return res.status(400).json({error:"walletMoney must be a valid non-negative number"})
+            }
+        }
+
+        const updatedStudent=await User.findByIdAndUpdate(id,updateData,{new:true}).select("-password");
+        res.json(updatedStudent)
+    }catch(error){
+        console.error('Error updating student:',error);
+        res.status(500).json({error:"Failed to update student"})
+    }
+}
+
+export const deleteStudentByAdmin=async(req,res)=>{
+    try{
+        const {id}=req.params;
+        const student=await User.findOne({_id:id,role:"student"}).select("-password");
+        if(!student){
+            return res.status(404).json({error:"Student not found"})
+        }
+
+        await Promise.all([
+            WalletTransaction.deleteMany({userId:id}),
+            Cart.deleteOne({userId:id}),
+            Order.deleteMany({userId:id}),
+            User.findByIdAndDelete(id),
+        ]);
+
+        res.json({message:"Student and related data deleted successfully",student})
+    }catch(error){
+        console.error('Error deleting student:',error);
+        res.status(500).json({error:"Failed to delete student"})
     }
 }
