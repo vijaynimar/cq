@@ -31,6 +31,13 @@ const orderSchema = new Schema(
       status: { type: String, enum: ["pending", "paid", "failed", "refunded"], default: "pending", index: true },
       transactionId: { type: String },
     },
+    pickupTime: { type: Date, required: true, index: true },
+    kitchenStatus: {
+      type: String,
+      enum: ["received", "preparing", "ready", "completed", "cancelled"],
+      default: "received",
+      index: true,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "paid", "shipped", "delivered", "cancelled"],
