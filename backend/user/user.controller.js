@@ -17,6 +17,7 @@ export const createUser = async (req, res) => {
     const hashedPassword = await passwordHash(password);
     //check if user already exists email or by phone
     const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email or phone already exists' });
     }
@@ -29,9 +30,30 @@ export const createUser = async (req, res) => {
       role
     });
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    const safeUser = savedUser.toObject();
+    delete safeUser.password;
+    res.status(201).json(safeUser);
   } catch (err) {
     console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error('Error fetching current user:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -51,7 +73,7 @@ export const LoginUser = async (req, res) => {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });    
+        res.json({ token, user: { id: user._id, email: user.email, role: user.role } });    
     } catch (err) {
         console.error('Error logging in user:', err);
         res.status(500).json({ error: 'Internal server error' });
