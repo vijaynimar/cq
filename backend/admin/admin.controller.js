@@ -271,3 +271,99 @@ export const updateOrderKitchenStatus=async(req,res)=>{
         res.status(500).json({error:"Failed to update order status"})
     }
 }
+
+export const getDashboardAnalytics = async (req, res) => {
+    try {
+        const weekdayNames = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ];
+
+        const [salesByDayRaw, popularItemsRaw, ordersPerHourRaw] = await Promise.all([
+            Order.aggregate([
+                {
+                    $match: {
+                        kitchenStatus: { $ne: "cancelled" },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { $dayOfWeek: "$createdAt" },
+                        totalSales: { $sum: { $ifNull: ["$amountSummary.total", 0] } },
+                        totalOrders: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            Order.aggregate([
+                {
+                    $match: {
+                        kitchenStatus: { $ne: "cancelled" },
+                    },
+                },
+                { $unwind: "$items" },
+                {
+                    $group: {
+                        _id: "$items.productId",
+                        name: { $first: "$items.nameSnapshot" },
+                        totalOrdered: { $sum: "$items.quantity" },
+                    },
+                },
+                { $sort: { totalOrdered: -1 } },
+                { $limit: 8 },
+            ]),
+            Order.aggregate([
+                {
+                    $match: {
+                        kitchenStatus: { $ne: "cancelled" },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { $hour: "$createdAt" },
+                        totalOrders: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+        ]);
+
+        const salesByDay = weekdayNames.map((day, index) => {
+            const found = salesByDayRaw.find((item) => item._id === index + 1);
+            return {
+                day,
+                totalSales: Number((found?.totalSales || 0).toFixed(2)),
+                totalOrders: found?.totalOrders || 0,
+            };
+        });
+
+        const popularItems = popularItemsRaw.map((item) => ({
+            productId: item._id,
+            name: item.name || "Unknown Item",
+            totalOrdered: item.totalOrdered || 0,
+        }));
+
+        const ordersPerHour = Array.from({ length: 24 }, (_, hour) => {
+            const found = ordersPerHourRaw.find((item) => item._id === hour);
+            return {
+                hour,
+                label: `${String(hour).padStart(2, "0")}:00`,
+                totalOrders: found?.totalOrders || 0,
+            };
+        });
+
+        res.json({
+            salesByDay,
+            popularItems,
+            ordersPerHour,
+        });
+    } catch (error) {
+        console.error("Error fetching admin dashboard analytics:", error);
+        res.status(500).json({ error: "Failed to fetch dashboard analytics" });
+    }
+};

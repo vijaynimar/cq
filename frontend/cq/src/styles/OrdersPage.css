@@ -1,4 +1,4 @@
-.orders-page { min-height:100vh; padding:24px; background:linear-gradient(135deg,#f0f4ff,#f8fbff); }
+.orders-page { min-height:100vh; padding:24px; background:linear-gradient(180deg,#dbeafe,#ffffff); }
 .orders-shell { max-width:1200px; margin:0 auto; }
 .orders-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 .orders-topbar h1 { margin:0; color:#24336d; }

@@ -2,7 +2,7 @@
   min-height: 100vh;
   width: 100%;
   padding: 28px;
-  background: linear-gradient(135deg, #eef2ff 0%, #f4f7ff 45%, #eaf0ff 100%);
+  background: linear-gradient(180deg, #dbeafe 0%, #ffffff 100%);
 }
 
 .students-shell {
@@ -96,11 +96,11 @@
 }
 
 .student-edit-btn {
-  background: linear-gradient(135deg, #4f7cff, #3e63dd);
+  background: #2563eb;
 }
 
 .student-delete-btn {
-  background: linear-gradient(135deg, #ff6b6b, #f04c4c);
+  background: #1d4ed8;
 }
 
 .students-modal-overlay {
@@ -167,7 +167,7 @@
 }
 
 .students-save-btn {
-  background: linear-gradient(135deg, #4f7cff, #3e63dd);
+  background: #2563eb;
   color: #fff;
 }
 

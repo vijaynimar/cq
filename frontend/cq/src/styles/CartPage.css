@@ -1,4 +1,4 @@
-.cart-page { min-height: 100vh; padding: 24px; background: linear-gradient(135deg,#eef2ff,#f8fbff); }
+.cart-page { min-height: 100vh; padding: 24px; background: linear-gradient(180deg,#dbeafe,#ffffff); }
 .cart-shell { max-width: 1400px; margin: 0 auto; }
 .cart-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 .cart-topbar h1 { margin:0; color:#24336d; }
@@ -12,9 +12,9 @@
 .cart-item { border:1px solid #ecf0ff; border-radius:10px; padding:8px; display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center; }
 .qty-controls { display:flex; align-items:center; gap:6px; }
 .qty-controls button { width:26px; height:26px; border:none; border-radius:6px; background:#f1f5ff; cursor:pointer; }
-.remove-btn { border:none; border-radius:8px; padding:7px 10px; background:#ffe2e2; color:#992222; font-weight:700; cursor:pointer; }
+.remove-btn { border:none; border-radius:8px; padding:7px 10px; background:#e0ecff; color:#1e40af; font-weight:700; cursor:pointer; }
 .checkout-box { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
 .checkout-box input { border:1px solid #dbe3ff; border-radius:8px; padding:9px 10px; }
-.checkout-box button { border:none; border-radius:9px; padding:10px 12px; background:linear-gradient(135deg,#1a8b4f,#16a34a); color:#fff; font-weight:800; cursor:pointer; }
+.checkout-box button { border:none; border-radius:9px; padding:10px 12px; background:#2563eb; color:#fff; font-weight:800; cursor:pointer; }
 @media (max-width: 1100px) { .cart-layout { grid-template-columns: 1fr; } }
 @media (max-width: 680px) { .cart-page { padding: 12px; } }
