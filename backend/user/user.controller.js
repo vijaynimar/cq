@@ -1,35 +1,29 @@
 import { User } from "../model/user.js";
 import { RegistrationOtp } from "../model/registrationOtp.js";
 import { PasswordResetOtp } from "../model/passwordResetOtp.js";
+import "dotenv/config";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import crypto from "node:crypto";
 
 const OTP_EXPIRY_MINUTES = 10;
-const GMAIL_USER = "fitnessbuddy08@gmail.com";
-const GMAIL_PASS = "yrvq brdr jgyv ckrp".replace(/\s+/g, "");
+const gmail =  "fitnessbuddy08@gmail.com";
+const pass ="yrvq brdr jgyv ckrp"
 
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: GMAIL_USER,
-      pass: GMAIL_PASS,
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-  });
-};
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  auth: {
+    user: gmail,
+    pass,
+  },
+});
 
-const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
+const generateOtpCode = () => String(crypto.randomInt(100000, 1000000));
 
 const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
-  const transporter = createTransporter();
   await transporter.sendMail({
-    from: GMAIL_USER,
+    from: gmail,
     to: email,
     subject: "Crave Cart Registration OTP",
     text: `Hello ${firstName || "User"}, your OTP is ${otp}. It will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
@@ -47,9 +41,8 @@ const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
 };
 
 const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
-  const transporter = createTransporter();
   await transporter.sendMail({
-    from: GMAIL_USER,
+    from: gmail,
     to: email,
     subject: "Crave Cart Password Reset OTP",
     text: `Hello ${firstName || "User"}, your password reset OTP is ${otp}. It will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
