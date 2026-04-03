@@ -5,7 +5,6 @@ import '../styles/ForgotPasswordPage.css'
 function ForgotPasswordPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const serverUrl = import.meta.env.serverUrl || import.meta.env.VITE_SERVER_URL
@@ -13,7 +12,6 @@ function ForgotPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setMessage('')
     setIsLoading(true)
 
     try {
@@ -25,11 +23,11 @@ function ForgotPasswordPage() {
 
       const data = await response.json()
       if (!response.ok) {
-        setError(data.error || 'Failed to send reset link')
+        setError(data.error || 'Failed to send reset OTP')
         return
       }
 
-      setMessage(data.message || 'Reset link sent successfully')
+      navigate('/reset-password', { state: { email } })
     } catch {
       setError('Unable to connect to server')
     } finally {
@@ -41,7 +39,7 @@ function ForgotPasswordPage() {
     <div className="forgot-container">
       <div className="forgot-box">
         <h2>Forgot Password</h2>
-        <p>Enter your registered email and we will send you a reset link.</p>
+        <p>Enter your registered email and we will send you a reset OTP.</p>
 
         <form onSubmit={handleSubmit}>
           <label htmlFor="forgot-email">Email</label>
@@ -55,10 +53,9 @@ function ForgotPasswordPage() {
           />
 
           {error && <p className="forgot-error">{error}</p>}
-          {message && <p className="forgot-success">{message}</p>}
 
           <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
+            {isLoading ? 'Sending...' : 'Send Reset OTP'}
           </button>
         </form>
 
