@@ -51,6 +51,10 @@ function LoginPage() {
     navigate('/register')
   }
 
+  const handleForgotPassword = () => {
+    navigate('/forgot-password')
+  }
+
   return (
     <div className="login-container">
       <div className="login-box">
@@ -85,6 +89,12 @@ function LoginPage() {
               required
             />
             <span className="input-underline"></span>
+          </div>
+
+          <div className="forgot-password-wrap">
+            <button type="button" className="forgot-password-link" onClick={handleForgotPassword}>
+              Forgot password?
+            </button>
           </div>
 
           {error && <p className="auth-error">{error}</p>}

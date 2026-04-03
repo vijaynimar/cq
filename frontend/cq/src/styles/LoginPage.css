@@ -79,6 +79,27 @@
   font-weight: 600;
 }
 
+.forgot-password-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.forgot-password-link {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.forgot-password-link:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
 .login-btn {
   width: 100%;
   margin-top: 14px;
