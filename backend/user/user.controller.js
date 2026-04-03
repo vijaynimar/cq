@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
 const OTP_EXPIRY_MINUTES = 10;
+const RESET_PASSWORD_EXPIRY_MINUTES = 15;
 
 const createTransporter = () => {
   const gmailUser = String(process.env.GMAIL_NODEMAILER || '').trim();
@@ -38,6 +39,29 @@ const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
         <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1e40af; margin: 14px 0;">${otp}</div>
         <p>This OTP is valid for ${OTP_EXPIRY_MINUTES} minutes.</p>
         <p>If you did not request this, please ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
+const sendResetPasswordEmail = async ({ email, firstName, resetLink }) => {
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: process.env.GMAIL_NODEMAILER,
+    to: email,
+    subject: "Crave Cart Reset Password",
+    text: `Hello ${firstName || "User"}, reset your password using this link: ${resetLink}. This link expires in ${RESET_PASSWORD_EXPIRY_MINUTES} minutes.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto;">
+        <h2 style="color:#1d4ed8;">Crave Cart - Reset Password</h2>
+        <p>Hello <strong>${firstName || "User"}</strong>,</p>
+        <p>Click the button below to reset your password:</p>
+        <p style="margin: 18px 0;">
+          <a href="${resetLink}" style="background:#2563eb;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;display:inline-block;font-weight:700;">Reset Password</a>
+        </p>
+        <p>If button does not work, use this link:</p>
+        <p style="word-break: break-all; color:#1e40af;">${resetLink}</p>
+        <p>This link is valid for ${RESET_PASSWORD_EXPIRY_MINUTES} minutes.</p>
       </div>
     `,
   });
@@ -170,6 +194,83 @@ export const verifyRegistrationOtp = async (req, res) => {
   } catch (err) {
     console.error("Error verifying registration OTP:", err);
     return res.status(500).json({ error: "Failed to verify OTP" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    if (!process.env.GMAIL_NODEMAILER || !process.env.GMAIL_NODEMAILER_PASS) {
+      return res.status(500).json({ error: "Email service is not configured" });
+    }
+
+    const user = await User.findOne({ email, deletedAt: null });
+    if (!user) {
+      return res.status(404).json({ error: "Email does not exist" });
+    }
+
+    const resetToken = jwt.sign(
+      { userId: user._id, purpose: "reset-password" },
+      process.env.JWT_SECRET,
+      { expiresIn: `${RESET_PASSWORD_EXPIRY_MINUTES}m` }
+    );
+
+    const resetBaseUrl = (
+      "https://cq-v6c2.onrender.com"
+    ).replace(/\/$/, "");
+    const resetLink = `${resetBaseUrl}/reset-password/${resetToken}`;
+
+    await sendResetPasswordEmail({
+      email: user.email,
+      firstName: user.firstName,
+      resetLink,
+    });
+
+    return res.json({ message: "Reset password link sent to your email" });
+  } catch (err) {
+    console.error("Error sending reset password email:", err);
+    return res.status(500).json({ error: "Failed to send reset password link" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: "Token and new password are required" });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(400).json({ error: "Invalid or expired reset link" });
+    }
+
+    if (decoded?.purpose !== "reset-password" || !decoded?.userId) {
+      return res.status(400).json({ error: "Invalid reset token" });
+    }
+
+    const user = await User.findById(decoded.userId);
+    if (!user || user.deletedAt) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.password = await passwordHash(newPassword);
+    await user.save();
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Error resetting password:", err);
+    return res.status(500).json({ error: "Failed to reset password" });
   }
 };
 
