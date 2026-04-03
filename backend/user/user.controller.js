@@ -1,6 +1,47 @@
 import { User } from "../model/user.js";
+import { RegistrationOtp } from "../model/registrationOtp.js";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+
+const OTP_EXPIRY_MINUTES = 10;
+
+const createTransporter = () => {
+  const gmailUser = String(process.env.GMAIL_NODEMAILER || '').trim();
+  const gmailPass = String(process.env.GMAIL_NODEMAILER_PASS || '')
+    .trim()
+    .replace(/\s+/g, '');
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: gmailUser,
+      pass: gmailPass,
+    },
+  });
+};
+
+const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
+  const transporter = createTransporter();
+  await transporter.sendMail({
+    from: process.env.GMAIL_NODEMAILER,
+    to: email,
+    subject: "Crave Cart Registration OTP",
+    text: `Hello ${firstName || "User"}, your OTP is ${otp}. It will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color:#1d4ed8;">Crave Cart - Email Verification</h2>
+        <p>Hello <strong>${firstName || "User"}</strong>,</p>
+        <p>Your OTP for account registration is:</p>
+        <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1e40af; margin: 14px 0;">${otp}</div>
+        <p>This OTP is valid for ${OTP_EXPIRY_MINUTES} minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      </div>
+    `,
+  });
+};
 const passwordHash = async (password) => {
   // Implement your password hashing logic here (e.g., using argon2)
   // For demonstration purposes, this is a placeholder and should not be used in production
@@ -36,6 +77,99 @@ export const createUser = async (req, res) => {
   } catch (err) {
     console.error('Error creating user:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const sendRegistrationOtp = async (req, res) => {
+  try {
+    const { firstName, email, password, phone } = req.body;
+
+    if (!firstName || !email || !password || !phone) {
+      return res.status(400).json({ error: "First name, email, phone and password are required" });
+    }
+
+    if (!process.env.GMAIL_NODEMAILER || !process.env.GMAIL_NODEMAILER_PASS) {
+      return res.status(500).json({ error: "Email OTP service is not configured" });
+    }
+
+    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+    if (existingUser) {
+      return res.status(400).json({ error: "User with this email or phone already exists" });
+    }
+
+    const otp = generateOtpCode();
+    const otpHash = await argon2.hash(otp);
+    const hashedPassword = await passwordHash(password);
+    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    await RegistrationOtp.findOneAndUpdate(
+      { email },
+      {
+        email,
+        firstName,
+        phone,
+        passwordHash: hashedPassword,
+        otpHash,
+        expiresAt,
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+    );
+
+    await sendRegistrationOtpEmail({ email, firstName, otp });
+
+    return res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    console.error("Error sending registration OTP:", err);
+    return res.status(500).json({ error: "Failed to send OTP" });
+  }
+};
+
+export const verifyRegistrationOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: "Email and OTP are required" });
+    }
+
+    const otpDoc = await RegistrationOtp.findOne({ email });
+    if (!otpDoc) {
+      return res.status(400).json({ error: "OTP not found. Please request again" });
+    }
+
+    if (otpDoc.expiresAt < new Date()) {
+      await RegistrationOtp.deleteOne({ _id: otpDoc._id });
+      return res.status(400).json({ error: "OTP expired. Please request a new OTP" });
+    }
+
+    const isOtpValid = await argon2.verify(otpDoc.otpHash, String(otp));
+    if (!isOtpValid) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    const existingUser = await User.findOne({ $or: [{ email: otpDoc.email }, { phone: otpDoc.phone }] });
+    if (existingUser) {
+      await RegistrationOtp.deleteOne({ _id: otpDoc._id });
+      return res.status(400).json({ error: "User with this email or phone already exists" });
+    }
+
+    const newUser = new User({
+      firstName: otpDoc.firstName,
+      email: otpDoc.email,
+      phone: otpDoc.phone,
+      password: otpDoc.passwordHash,
+      role: "student",
+    });
+
+    const savedUser = await newUser.save();
+    await RegistrationOtp.deleteOne({ _id: otpDoc._id });
+
+    const safeUser = savedUser.toObject();
+    delete safeUser.password;
+    return res.status(201).json(safeUser);
+  } catch (err) {
+    console.error("Error verifying registration OTP:", err);
+    return res.status(500).json({ error: "Failed to verify OTP" });
   }
 };
 

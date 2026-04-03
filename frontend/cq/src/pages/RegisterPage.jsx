@@ -7,8 +7,12 @@ function RegisterPage() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otpMessage, setOtpMessage] = useState('')
   const [focusedField, setFocusedField] = useState(null)
   const navigate = useNavigate()
   const serverUrl = import.meta.env.serverUrl || import.meta.env.VITE_SERVER_URL
@@ -16,10 +20,11 @@ function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault()
     setError('')
+    setOtpMessage('')
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${serverUrl}/user/createUser`, {
+      const response = await fetch(`${serverUrl}/user/send-registration-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,11 +40,75 @@ function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Registration failed')
+        setError(data.error || 'Failed to send OTP')
         return
       }
 
+      setShowOtpModal(true)
+      setOtpMessage('OTP sent to your email. Please verify to create your account.')
+    } catch {
+      setError('Unable to connect to server')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    setError('')
+    setIsVerifyingOtp(true)
+
+    try {
+      const response = await fetch(`${serverUrl}/user/verify-registration-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'OTP verification failed')
+        return
+      }
+
+      setShowOtpModal(false)
       navigate('/login')
+    } catch {
+      setError('Unable to connect to server')
+    } finally {
+      setIsVerifyingOtp(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    setError('')
+    setOtpMessage('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch(`${serverUrl}/user/send-registration-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: name,
+          email,
+          phone,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || 'Failed to resend OTP')
+        return
+      }
+
+      setOtpMessage('A new OTP has been sent to your email.')
     } catch {
       setError('Unable to connect to server')
     } finally {
@@ -128,6 +197,36 @@ function RegisterPage() {
           <p>Already have an account? <a onClick={handleLogin} className="link">Login</a></p>
         </div>
       </div>
+
+      {showOtpModal && (
+        <div className="otp-modal-overlay">
+          <div className="otp-modal">
+            <h3>Verify Email OTP</h3>
+            <p>Enter the 6-digit OTP sent to <strong>{email}</strong></p>
+            {otpMessage && <p className="otp-message">{otpMessage}</p>}
+            <form onSubmit={handleVerifyOtp}>
+              <input
+                type="text"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter OTP"
+                className="otp-input"
+                required
+              />
+
+              <div className="otp-actions">
+                <button type="submit" className="register-btn" disabled={isVerifyingOtp}>
+                  {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
+                </button>
+                <button type="button" className="otp-resend-btn" disabled={isLoading} onClick={handleResendOtp}>
+                  {isLoading ? 'Sending...' : 'Resend OTP'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
