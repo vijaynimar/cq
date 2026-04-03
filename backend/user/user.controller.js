@@ -219,8 +219,11 @@ export const forgotPassword = async (req, res) => {
       { expiresIn: `${RESET_PASSWORD_EXPIRY_MINUTES}m` }
     );
 
-    const resetBaseUrl = (
-      "https://cq-v6c2.onrender.com"
+    const resetBaseUrl = String(
+      process.env.RESET_PASSWORD_BASE_URL ||
+      process.env.FRONTEND_URL ||
+      req.headers.origin ||
+      "https://cq-1-bpdm.onrender.com"
     ).replace(/\/$/, "");
     const resetLink = `${resetBaseUrl}/reset-password/${resetToken}`;
 
