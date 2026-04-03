@@ -1,7 +1,7 @@
 .profile-container {
   width: 100%;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: linear-gradient(180deg, #dbeafe 0%, #ffffff 100%);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -88,14 +88,14 @@
   height: 130px;
   object-fit: cover;
   border-radius: 50%;
-  border: 4px solid rgba(102, 126, 234, 0.25);
+  border: 4px solid rgba(37, 99, 235, 0.22);
   background: #f6f7ff;
 }
 
 .image-upload-label {
   display: inline-block;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #2563eb;
   color: #fff;
   border-radius: 8px;
   font-weight: 700;
@@ -106,12 +106,12 @@
 
 .image-upload-label:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
 }
 
 .update-image-btn {
   padding: 6px 10px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #2563eb;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -123,7 +123,7 @@
 
 .update-image-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
 }
 
 .update-image-btn:disabled {
@@ -194,13 +194,13 @@
 
 .field-input-wrapper input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .update-field-btn {
   padding: 8px 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #2563eb;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -213,7 +213,7 @@
 
 .update-field-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
 }
 
 .update-field-btn:disabled {
@@ -258,14 +258,14 @@
   color: #fff;
   font-size: 0.95rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #ff5f6d, #ffc371);
+  background: #2563eb;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .logout-profile-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(255, 95, 109, 0.35);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
 .delete-account-btn {
@@ -275,14 +275,14 @@
   color: #fff;
   font-size: 0.95rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #d92d20, #f04438);
+  background: #1d4ed8;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .delete-account-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(217, 45, 32, 0.35);
+  box-shadow: 0 8px 20px rgba(29, 78, 216, 0.35);
 }
 
 .delete-account-btn:disabled {

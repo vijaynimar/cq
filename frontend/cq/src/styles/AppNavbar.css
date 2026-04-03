@@ -1,0 +1,177 @@
+.app-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  margin: 20px 20px 0;
+  border-radius: 18px;
+  background: #2563eb;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.app-navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-brand-title {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.app-brand-title:hover {
+  color: #dbeafe;
+}
+
+.app-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.app-nav-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.app-nav-action:hover {
+  background: transparent;
+  color: #dbeafe;
+}
+
+.app-nav-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.app-nav-label {
+  line-height: 1;
+}
+
+@media (max-width: 1200px) {
+  .app-navbar-right {
+    gap: 30px;
+  }
+
+  .app-nav-action {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+
+  .app-nav-label {
+    display: none;
+  }
+
+  .app-nav-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-navbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 16px 0;
+  }
+
+  .app-navbar-left {
+    width: 100%;
+  }
+
+  .app-navbar-right {
+    width: 100%;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+
+  .app-nav-action {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-navbar {
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin: 12px 12px 0;
+  }
+
+  .app-brand-title {
+    font-size: 1rem;
+  }
+
+  .app-navbar-right {
+    gap: 8px;
+  }
+
+  .app-nav-action {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    gap: 4px;
+  }
+
+  .app-nav-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .app-navbar {
+    padding: 8px 10px;
+    gap: 8px;
+    margin: 8px 8px 0;
+  }
+
+  .app-brand-title {
+    font-size: 0.9rem;
+  }
+
+  .app-navbar-right {
+    gap: 6px;
+  }
+
+  .app-nav-action {
+    padding: 4px 6px;
+    font-size: 0.65rem;
+  }
+
+  .app-nav-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 0.5rem;
+  }
+}
