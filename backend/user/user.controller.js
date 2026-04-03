@@ -6,18 +6,15 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
 const OTP_EXPIRY_MINUTES = 10;
+const GMAIL_USER = "fitnessbuddy08@gmail.com";
+const GMAIL_PASS = "yrvq brdr jgyv ckrp".replace(/\s+/g, "");
 
 const createTransporter = () => {
-  const gmailUser = String(process.env.GMAIL_NODEMAILER || '').trim();
-  const gmailPass = String(process.env.GMAIL_NODEMAILER_PASS || '')
-    .trim()
-    .replace(/\s+/g, '');
-
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: gmailUser,
-      pass: gmailPass,
+      user: GMAIL_USER,
+      pass: GMAIL_PASS,
     },
   });
 };
@@ -27,7 +24,7 @@ const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000)
 const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
   const transporter = createTransporter();
   await transporter.sendMail({
-    from: process.env.GMAIL_NODEMAILER,
+    from: GMAIL_USER,
     to: email,
     subject: "Crave Cart Registration OTP",
     text: `Hello ${firstName || "User"}, your OTP is ${otp}. It will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
@@ -47,7 +44,7 @@ const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
 const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
   const transporter = createTransporter();
   await transporter.sendMail({
-    from: process.env.GMAIL_NODEMAILER,
+    from: GMAIL_USER,
     to: email,
     subject: "Crave Cart Password Reset OTP",
     text: `Hello ${firstName || "User"}, your password reset OTP is ${otp}. It will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
@@ -107,10 +104,6 @@ export const sendRegistrationOtp = async (req, res) => {
 
     if (!firstName || !email || !password || !phone) {
       return res.status(400).json({ error: "First name, email, phone and password are required" });
-    }
-
-    if (!process.env.GMAIL_NODEMAILER || !process.env.GMAIL_NODEMAILER_PASS) {
-      return res.status(500).json({ error: "Email OTP service is not configured" });
     }
 
     const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
@@ -199,10 +192,6 @@ export const forgotPassword = async (req, res) => {
     const { email } = req.body;
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
-    }
-
-    if (!process.env.GMAIL_NODEMAILER || !process.env.GMAIL_NODEMAILER_PASS) {
-      return res.status(500).json({ error: "Email service is not configured" });
     }
 
     const user = await User.findOne({ email, deletedAt: null });
