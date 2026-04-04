@@ -22,6 +22,7 @@ const transporter = nodemailer.createTransport({
 const generateOtpCode = () => String(crypto.randomInt(100000, 1000000));
 
 const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
+  try {
   await transporter.sendMail({
     from: gmail,
     to: email,
@@ -38,9 +39,14 @@ const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
       </div>
     `,
   });
+} catch (err) {
+  console.error("Error sending registration OTP email:", err);
+  throw new Error("Failed to send registration OTP email");
 };
 
 const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
+  try {
+  console.log(`Sending password reset email to ${email} with OTP ${otp}`);
   await transporter.sendMail({
     from: gmail,
     to: email,
@@ -57,7 +63,12 @@ const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
       </div>
     `,
   });
+  console.log(`Password reset email sent to ${email}`);
+} catch (err) {
+  console.error("Error sending password reset email:", err);
+  throw new Error("Failed to send password reset email");
 };
+
 const passwordHash = async (password) => {
   // Implement your password hashing logic here (e.g., using argon2)
   // For demonstration purposes, this is a placeholder and should not be used in production
