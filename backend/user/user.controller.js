@@ -42,6 +42,7 @@ const sendRegistrationOtpEmail = async ({ email, firstName, otp }) => {
 } catch (err) {
   console.error("Error sending registration OTP email:", err);
   throw new Error("Failed to send registration OTP email");
+}
 };
 
 const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
@@ -67,6 +68,7 @@ const sendResetPasswordEmail = async ({ email, firstName, otp }) => {
 } catch (err) {
   console.error("Error sending password reset email:", err);
   throw new Error("Failed to send password reset email");
+}
 };
 
 const passwordHash = async (password) => {
